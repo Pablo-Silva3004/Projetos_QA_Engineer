@@ -12,7 +12,7 @@ Quero conectar três partes do meu aprendizado:
 
 1. **Estudar com direção:** seguir uma trilha de 16 semanas, com objetivos e entregas definidos.
 2. **Praticar e registrar:** organizar exercícios e projetos em pastas relacionadas aos cursos, mantendo histórico e documentação.
-3. **Evoluir com acompanhamento:** conversar com um mentor de IA dentro do QA Path e publicar as entregas no GitHub pelo próprio aplicativo.
+3. **Evoluir com acompanhamento:** conversar com um mentor de IA local dentro do QA Path e publicar as entregas no GitHub pelo próprio aplicativo, sem usar uma API paga de IA.
 
 O foco de carreira inclui empresas como a B3. Este é um projeto pessoal de preparação, sem vínculo com a empresa e sem representar seus requisitos oficiais de contratação.
 
@@ -23,6 +23,16 @@ Estrutura atual:
 ```text
 Projetos_QA_Engineer/
 ├── README.md
+├── Iniciar_QA_Path.cmd         # Iniciar a versão local no Windows
+├── Encerrar_QA_Path.cmd        # Encerrar o servidor local
+├── Cypress/
+├── Playwright/
+├── Postman_API/
+├── Java_JUnit5/
+├── MongoDB/
+├── JMeter/
+├── GitHub_Actions/
+├── Kafka/
 └── Aplication_QA_Monitoring/    # Código do QA Path
     ├── src/                   # Interface, trilha e regras de negócio
     ├── server/                # Serviço local de IA e publicação no GitHub
@@ -31,7 +41,7 @@ Projetos_QA_Engineer/
     └── README.md              # Documentação técnica da aplicação
 ```
 
-As pastas dos estudos serão acrescentadas conforme os projetos forem produzidos. A organização pretendida é:
+As pastas dos cursos já contêm um guia da entrega esperada. Os projetos serão acrescentados durante os estudos, nesta organização:
 
 ```text
 <pasta-do-curso>/
@@ -41,7 +51,7 @@ As pastas dos estudos serão acrescentadas conforme os projetos forem produzidos
     └── <documentação-e-evidências>
 ```
 
-Os nomes exatos das pastas serão vinculados aos cursos na configuração do serviço. Essa estrutura é uma proposta de organização; as pastas de estudos ainda não estão todas criadas.
+Os vínculos entre cursos e pastas estão em `Aplication_QA_Monitoring/src/projectConfig.ts`. O destino padrão é `Pablo-Silva3004/Projetos_QA_Engineer`, branch `main`.
 
 ## Plano de estudos
 
@@ -82,11 +92,13 @@ O fluxo desejado dentro de **Projetos & Entregas** é:
 4. Enviar a entrega para a pasta correspondente no GitHub.
 5. Receber o link do commit e registrar a publicação como evidência no QA Path.
 
-O serviço foi implementado para realizar o equivalente a `git add`, `git commit` e `git push` pela API do GitHub. Cada envio cria uma nova subpasta e um commit, preservando os arquivos anteriores e sem usar force push.
+No modo local, o serviço executa `git add`, `git commit` e `git push` usando o Git instalado e a autenticação já existente no computador. Apenas a subpasta da entrega entra no commit; outras alterações em andamento são preservadas. A branch precisa estar sincronizada com o GitHub. O modo alternativo pela API do GitHub continua disponível mediante configuração de token.
 
-**Estado atual:** a interface e o backend local estão implementados e possuem testes com APIs simuladas. O chat e a publicação automática **ainda dependem da configuração das credenciais, da branch e das pastas dos cursos**. A aplicação hospedada continua estática; a ativação online também exige publicar o backend.
+**Modo escolhido:** uso local com **Ollama**, modelo `qwen3:4b-instruct`, e publicação com Git local. Esse modo não precisa de chave OpenAI nem faz chamadas à API paga da OpenAI. Requer o computador ligado, o Ollama aberto, o modelo baixado e acesso Git de escrita ao repositório. O desempenho depende do hardware.
 
-O mentor será um assistente OpenAI com o contexto fornecido pela aplicação. Ele não herda automaticamente o histórico da conversa usada para desenvolver o projeto. Na implementação atual, recebe as mensagens, o curso, o objetivo da semana e os nomes dos arquivos selecionados; a leitura e revisão completa do repositório ainda é uma evolução futura.
+O mentor é um modelo local com o contexto fornecido pela aplicação; não é esta sessão do ChatGPT e não herda seu histórico automaticamente. Recebe mensagens, curso, objetivo da semana e nomes dos arquivos selecionados. A leitura e revisão completa do repositório ainda é uma evolução futura.
+
+O site hospedado é uma versão estática do gestor de estudos. Ele não acessa o Ollama nem a autenticação Git do seu computador. Use a versão local para conversar e publicar entregas. O histórico de estudos do site e o de `localhost` são separados; use exportação/importação JSON para transferi-los.
 
 ## Projeto de portfólio: Financial Quality Lab
 
@@ -99,6 +111,10 @@ Cada entrega deve explicar o que foi testado, como executar, quais resultados fo
 ## Executar o QA Path
 
 Na raiz deste repositório:
+
+No Windows, execute **`Iniciar_QA_Path.cmd`** e abra **http://127.0.0.1:8787**. Para parar o servidor, execute **`Encerrar_QA_Path.cmd`**. Na primeira instalação em outro computador, instale Node.js 22.18+, Git e [Ollama](https://docs.ollama.com/windows), execute `ollama pull qwen3:4b-instruct` e instale as dependências da aplicação.
+
+Para desenvolvimento somente do frontend:
 
 ```bash
 cd Aplication_QA_Monitoring
@@ -113,11 +129,12 @@ npm run build
 npm run check:server
 npm test
 npm run test:e2e
+npm run test:local-git
 ```
 
 Os testes E2E usam Microsoft Edge instalado e incluem desktop e celular emulado. Em outro ambiente, ajuste o navegador em `playwright.config.ts`. No PowerShell com execução de scripts bloqueada, use `npm.cmd` no lugar de `npm`.
 
-Para executar o frontend com o serviço local de IA/GitHub, configure `.env` a partir de `.env.example`, faça o build e execute `npm start`. O serviço requer Node.js 22.18 ou superior e fica disponível em `http://127.0.0.1:8787`.
+Para executar manualmente o frontend com os serviços locais, faça o build e execute `npm start`. O arquivo `.env` é opcional no modo padrão: o provedor é Ollama e o destino Git já está definido em `src/projectConfig.ts`. Use `.env.example` para personalizar o modelo ou selecionar explicitamente outro modo.
 
 As instruções completas de configuração, arquitetura, testes e limitações estão no [README do QA Path](./Aplication_QA_Monitoring/README.md).
 

@@ -9,7 +9,8 @@
     "test": "vitest run src",
     "test:e2e": "npm run build && playwright test",
     "start": "node --env-file-if-exists=.env server/run.mjs",
-    "check:server": "tsc -p tsconfig.server.json"
+    "check:server": "tsc -p tsconfig.server.json",
+    "test:local-git": "node --test server/local-git.test.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

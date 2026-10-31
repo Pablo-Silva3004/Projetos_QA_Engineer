@@ -63,33 +63,47 @@ O gestor de estudos mantém os registros no navegador e na origem onde o app foi
 
 ## Chat de IA e publicação no GitHub
 
-Em **Projetos & Entregas**, o usuário pode selecionar um curso, conversar com um mentor OpenAI e enviar arquivos ou uma pasta de projeto. **Enviar e publicar no GitHub** cria blobs, uma árvore baseada no commit atual, um commit e uma atualização da branch com `force: false`. Isso equivale a adicionar os arquivos selecionados, fazer commit e push, pela API do GitHub; o servidor não executa comandos arbitrários do chat.
+Em **Projetos & Entregas**, o usuário pode selecionar um curso, conversar com o mentor local Ollama e enviar arquivos ou uma pasta de projeto. **Enviar e publicar no GitHub** usa o Git e a autenticação existentes no computador para adicionar somente a entrega, fazer commit e push. O servidor não executa comandos arbitrários sugeridos pelo modelo. O modo alternativo por API GitHub permanece disponível com `GITHUB_MODE=api` e token no servidor.
 
 Os arquivos vão para `<pasta-configurada-do-curso>/<identificador-do-envio>/<caminho-relativo>`. Cada envio usa uma nova subpasta, sem excluir entregas anteriores. Depois da confirmação da atualização da branch, o app registra uma evidência com URL do commit. Conflitos e falhas de permissão não são apresentados como sucesso. A branch precisa existir e ter um commit inicial.
 
 ### Estado atual
 
-A interface está preparada, e o backend local está implementado. **A integração real ainda não está ativada**: faltam o repositório/branch/pastas escolhidos pelo usuário e credenciais de execução. A publicação Sites atual continua estática; mostra o estado pendente e preserva o funcionamento dos módulos existentes. Habilitar os plugins nesta conversa não configura automaticamente credenciais de execução da aplicação.
+O modo padrão é local: `AI_PROVIDER=ollama`, modelo `qwen3:4b-instruct`, `GITHUB_MODE=local-git`. O repositório é `Pablo-Silva3004/Projetos_QA_Engineer`, branch `main`, com pastas de curso definidas em `src/projectConfig.ts`. Não são necessárias chaves OpenAI ou GitHub neste modo; o Git precisa estar autenticado com permissão para fazer push. A interface só habilita o chat depois de verificar o modelo no Ollama.
 
-Para habilitar o chat hospedado, usar a skill `openai-platform-api-key` do plugin OpenAI Developers para a configuração aprovada da chave e armazená-la como segredo do servidor. Antes de hospedar o backend no mesmo Site, migrar a publicação estática para o starter de servidor suportado por Sites, mantendo o project_id e a audiência privada. Não remover a configuração estática enquanto essa migração não estiver construída e testada.
+O site hospedado continua estático: não acessa o Ollama nem o Git local do computador. Para usar esses recursos, abra `http://127.0.0.1:8787` após iniciar a versão local. Dados do navegador no site e em localhost ficam em origens diferentes: use backup JSON para transferir o progresso.
+
+OpenAI é uma opção futura, ativada apenas com `AI_PROVIDER=openai`, chave e modelo explícitos. Esse modo pode gerar cobrança conforme uso. Para hospedá-lo, a chave deve ser configurada como segredo do servidor pelo fluxo OpenAI Developers, e o Site precisa migrar para backend com autenticação. Nenhuma dessas opções é necessária para o modo local escolhido.
 
 ### Execução local do serviço
 
-Requer Node.js **22.18+**, com execução nativa de TypeScript. Copie `.env.example` para `.env` e configure apenas no servidor:
+Requer Node.js **22.18+**, Git autenticado, [Ollama para Windows](https://docs.ollama.com/windows) e o modelo local:
 
-- `OPENAI_API_KEY` e `OPENAI_MODEL`: chave e modelo de API autorizado para a conta.
-- `GITHUB_TOKEN`: credencial restrita ao repositório escolhido, com permissão Contents de leitura/escrita. Não usar a credencial do repositório de hospedagem Sites como token GitHub.
+```bash
+ollama pull qwen3:4b-instruct
+npm run build
+npm start
+```
+
+No Windows, também é possível executar `../Iniciar_QA_Path.cmd`. Mantenha o Ollama aberto. O modelo ocupa aproximadamente 2,5 GB de download e consome memória durante o uso. O modo local não usa API paga de IA; depende dos recursos do computador.
+
+O `.env` é opcional. Para personalizar, copie `.env.example` e configure apenas no servidor:
+
+- `AI_PROVIDER=ollama`, `OLLAMA_URL` e `OLLAMA_MODEL`: provedor e modelo locais; a URL só aceita loopback HTTP.
+- `GITHUB_MODE=local-git`: autenticação pelo Git local. O serviço exige branch correta, origin correspondente e sincronização antes de publicar.
+- `OPENAI_API_KEY` e `OPENAI_MODEL`: somente para `AI_PROVIDER=openai`, que precisa ser selecionado explicitamente.
+- `GITHUB_TOKEN`: somente para `GITHUB_MODE=api`, restrito ao repositório escolhido e com permissão Contents de leitura/escrita.
 - `GITHUB_REPOSITORY`: `proprietario/repositorio`.
 - `GITHUB_BRANCH`: branch de destino já existente.
-- `GITHUB_COURSE_FOLDERS_JSON`: mapa entre os IDs dos cursos e as pastas exatas. Exemplo: `{"owned-cypress":"Cypress"}`. Os IDs dos demais materiais constam em `src/courseCatalog.ts`.
+- `GITHUB_COURSE_FOLDERS_JSON`: substitui opcionalmente o mapa padrão de `src/projectConfig.ts`. Exemplo: `{"owned-cypress":"Cypress"}`.
 
-Execute `npm run build`, `npm run check:server` e `npm start`. Abra `http://127.0.0.1:8787`; o mesmo servidor entrega o frontend e as rotas de integração. Sem `.env`, ele inicia com as conexões desabilitadas. Não exponha esse servidor local à internet: ele escuta apenas em loopback e não implementa autenticação própria. A futura publicação deve preservar a autenticação e autorização de Sites.
+Execute `npm run check:server` para verificar o backend. O servidor entrega o frontend e as rotas de integração no mesmo endereço local. Sem `.env`, usa os padrões acima e verifica a disponibilidade real do modelo. Ele escuta apenas em loopback e não implementa autenticação para exposição à internet. O Git cria uma subpasta por entrega, preserva alterações fora dela e não usa force push. Se um push falhar, o commit pode ficar local: confira o histórico antes de repetir.
 
-O chat usa a Responses API com `store: false`. Recebe mensagens, curso, objetivo da semana e nomes de arquivos selecionados. O conteúdo dos arquivos vai ao GitHub apenas no envio; o chat não recebe automaticamente o código completo nem o histórico desta conversa. As mensagens do chat ficam apenas na sessão da interface. Para revisar todo um repositório com IA, será necessário adicionar leitura autenticada e limites de contexto em uma próxima implementação.
+O chat local usa `/api/chat` do Ollama, sem requisições à OpenAI. Recebe mensagens, curso, objetivo da semana e nomes de arquivos selecionados. O conteúdo dos arquivos vai ao GitHub apenas no envio; o chat não recebe automaticamente o código completo nem o histórico desta conversa. As mensagens ficam na sessão da interface. No modo opcional OpenAI, usa Responses API com `store: false`.
 
 Uploads aceitam até 100 arquivos e 5 MB, incluindo binários em base64. Caminhos fora da pasta permitida, credenciais comuns, `.git`, dependências e build são rejeitados pelo servidor. Requisições de escrita exigem mesma origem. O serviço não executa o código enviado nem os testes desse código. Credenciais jamais usam prefixo `VITE_`, não entram no bundle, nos logs ou no backup local.
 
-`server/integration.ts` concentra os serviços portáveis; `server/run.mjs` fornece o adaptador HTTP local; `src/ProjectAssistant.tsx` implementa chat e envio. Os testes de integração usam respostas simuladas da OpenAI e do GitHub, sem chamadas pagas nem commits reais.
+`server/integration.ts` concentra os contratos; `server/local-chat.ts` integra Ollama; `server/local-git.mjs` publica pelo Git local; `server/run.mjs` fornece o adaptador HTTP; `src/ProjectAssistant.tsx` implementa chat e envio. Os testes de API usam respostas simuladas. `npm run test:local-git` cria repositórios temporários locais para verificar commits, push, repetição de envio e preservação de outras alterações, sem escrever no GitHub real.
 
 ## Limitações
 
