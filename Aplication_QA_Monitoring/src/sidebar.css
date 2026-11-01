@@ -1,0 +1,93 @@
+/* The navigation scrolls inside the viewport; the profile never pushes it out. */
+aside {
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  padding: 24px 16px 20px;
+  overflow: hidden;
+}
+
+aside .brand {
+  justify-content: center;
+  padding: 0;
+  min-width: 0;
+}
+
+aside .brand-icon { flex-shrink: 0; }
+
+aside .workspace {
+  text-align: center;
+  margin: 25px 4px 15px;
+  font-size: 8px;
+  letter-spacing: 1.3px;
+}
+
+aside nav {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  min-height: 0;
+  padding: 3px 2px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #435575 transparent;
+  scrollbar-gutter: stable both-edges;
+}
+
+aside .nav {
+  flex-shrink: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  gap: 10px;
+  text-align: left;
+  line-height: 1.4;
+}
+
+aside .nav svg, aside .nav small { flex-shrink: 0; }
+aside .nav-label { min-width: 0; overflow-wrap: anywhere; }
+aside .nav:focus-visible { outline-offset: -2px; }
+
+aside .sidebar-bottom {
+  margin-top: 0;
+  padding: 17px 8px 0;
+  min-width: 0;
+}
+
+aside .sidebar-bottom p { margin: 6px 0 13px; }
+aside .profile { padding-top: 14px; }
+aside .profile > span { flex-shrink: 0; }
+aside .profile > div { min-width: 0; overflow-wrap: anywhere; }
+
+@media (max-width: 1150px) and (min-width: 801px) {
+  aside { padding-right: 12px; padding-left: 12px; }
+  aside .nav { padding-right: 10px; padding-left: 10px; font-size: 12px; }
+}
+
+@media (max-width: 800px) {
+  aside {
+    position: relative;
+    inset: auto;
+    display: flex;
+    height: auto;
+    padding: 18px 16px 12px;
+    overflow: visible;
+  }
+  aside .brand { align-self: center; }
+  aside .workspace, aside .sidebar-bottom { display: none; }
+  aside nav {
+    flex-direction: row;
+    width: 100%;
+    min-height: 0;
+    margin-top: 16px;
+    padding: 4px 2px 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-gutter: auto;
+  }
+  aside .nav { width: auto; min-height: 42px; padding: 10px 12px; font-size: 11px; }
+  aside .nav-label { white-space: nowrap; overflow-wrap: normal; }
+}
